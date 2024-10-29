@@ -208,6 +208,7 @@ const isAuthenticated = (req, res, next) => {
 // Di server.js
 // Endpoint untuk menyimpan progress
 // Endpoint untuk menyimpan progress
+// Di server.js
 app.post('/api/progress', async (req, res) => {
     try {
         const { username, currentChapter, currentQuestionIndex, score, answer } = req.body;
@@ -256,7 +257,8 @@ app.post('/api/progress', async (req, res) => {
     }
 });
 
-// Endpoint untuk mengambil progress
+// Rute untuk mengambil progress
+// Di server.js
 app.get('/api/progress/:username', async (req, res) => {
     try {
         const { username } = req.params;
@@ -277,20 +279,6 @@ app.get('/api/progress/:username', async (req, res) => {
             message: 'Error fetching progress',
             error: error.message
         });
-    }
-});
-
-// Rute untuk mengambil progress
-app.get('/api/progress', isAuthenticated, async (req, res) => {
-    try {
-        const progress = await UserProgress.findOne({ userId: req.session.userId });
-        if (!progress) {
-            return res.status(404).json({ message: 'Progress tidak ditemukan' });
-        }
-        res.json(progress);
-    } catch (error) {
-        console.error('Error mengambil progress:', error);
-        res.status(500).json({ message: 'Gagal mengambil progress' });
     }
 });
 
