@@ -1,3 +1,4 @@
+// login.js
 document.addEventListener('DOMContentLoaded', function() {
     const loginForm = document.getElementById('login-form');
     
@@ -15,13 +16,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({ username, password }),
-                    credentials: 'include' // Penting untuk mengirim cookies
+                    credentials: 'include'
                 });
 
                 const data = await response.json();
 
                 if (response.ok) {
-                    localStorage.setItem('username', username);
+                    // Simpan username di localStorage
+                    localStorage.setItem('loggedInUser', username);
                     window.location.href = 'home.html';
                 } else {
                     const errorElement = document.getElementById('error-message');
@@ -29,8 +31,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             } catch (error) {
                 console.error('Error:', error);
-                const errorElement = document.getElementById('error-message');
-                errorElement.textContent = 'An error occurred. Please try again.';
             }
         });
     }

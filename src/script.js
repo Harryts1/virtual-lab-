@@ -933,10 +933,18 @@ document.getElementById('login-form').addEventListener('submit', function(e) {
   }
 });
 
-const loggedInUser = localStorage.getItem('loggedInUser');
 
 // Fungsi untuk menyimpan progress
-async function saveProgress(isCorrect = false) {
+// Di script.js
+// script.js
+
+// Variabel global
+let loggedInUser = localStorage.getItem('loggedInUser');
+
+// Fungsi untuk menyimpan progress
+async function saveProgress(isCorrect) {
+    const loggedInUser = localStorage.getItem('loggedInUser');
+    
     if (!loggedInUser) {
         console.error('No user logged in');
         return;
@@ -950,9 +958,11 @@ async function saveProgress(isCorrect = false) {
         answer: {
             chapter: currentChapter,
             questionIndex: currentQuestionIndex,
-            isCorrect
+            isCorrect: Boolean(isCorrect)
         }
     };
+
+    console.log('Saving progress:', progressData); // Debugging
 
     try {
         const response = await fetch('http://localhost:5000/api/progress', {
@@ -960,19 +970,157 @@ async function saveProgress(isCorrect = false) {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(progressData)
+            body: JSON.stringify(progressData),
+            credentials: 'include'
         });
 
-        if (!response.ok) {
-            throw new Error('Failed to save progress');
-        }
-
         const data = await response.json();
-        console.log('Progress saved successfully:', data);
+        console.log('Progress saved:', data);
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Failed to save progress');
+        }
     } catch (error) {
         console.error('Error saving progress:', error);
     }
 }
+
+// Fungsi untuk memuat pertanyaan
+function loadQuestion() {
+    if (!currentChapter || !quizData[currentChapter]) {
+        console.error('No chapter selected');
+        return;
+    }
+
+    const question = quizData[currentChapter][currentQuestionIndex];
+    const quizContainer = document.getElementById('quiz-container');
+    
+    quizContainer.innerHTML = `
+        <div class="question">
+            <p>${currentQuestionIndex + 1}. ${question.question}</p>
+            ${question.options.map((option, i) => `
+                <div>
+                    <input type="radio" id="option${i}" name="answer" value="${i}">
+                    <label for="option${i}">${option}</label>
+                </div>
+            `).join('')}
+        </div>
+    `;
+
+    // Reset tombol dan hasil
+    document.getElementById('submit-quiz').style.display = 'block';
+    document.getElementById('next-question').style.display = 'none';
+    document.getElementById('quiz-result').innerHTML = '';
+}
+
+// Event listener untuk tombol submit jawaban
+document.getElementById('submit-quiz')?.addEventListener('click', async () => {
+    const selectedAnswer = document.querySelector('input[name="answer"]:checked');
+    if (!selectedAnswer) {
+        alert('Pilih jawaban terlebih dahulu!');
+        return;
+    }
+
+    const answerIndex = parseInt(selectedAnswer.value);
+    const question = quizData[currentChapter][currentQuestionIndex];
+    const isCorrect = answerIndex === question.correct;
+
+    if (isCorrect) {
+        score++;
+        document.getElementById('quiz-result').innerHTML = '<p style="color: green;">Benar!</p>';
+    } else {
+        document.getElementById('quiz-result').innerHTML = '<p style="color: red;">Salah!</p>';
+    }
+
+    // Simpan progress
+    await saveProgress(isCorrect);
+
+    document.getElementById('submit-quiz').style.display = 'none';
+    document.getElementById('next-question').style.display = 'block';
+});
+
+// Event listener untuk tombol next
+document.getElementById('next-question')?.addEventListener('click', () => {
+    currentQuestionIndex++;
+    if (currentQuestionIndex < quizData[currentChapter].length) {
+        loadQuestion();
+        updateProgress();
+    } else {
+        showFinalResult();
+    }
+});
+
+// Event listener untuk pemilihan chapter
+document.querySelectorAll('.chapter-btn').forEach(button => {
+    button.addEventListener('click', async () => {
+        currentChapter = button.getAttribute('data-chapter');
+        currentQuestionIndex = 0;
+        score = 0;
+        await saveProgress(false); // Simpan progress awal chapter
+        loadQuestion();
+        updateProgress();
+    });
+});
+
+// Fungsi untuk menampilkan hasil akhir
+function showFinalResult() {
+    const quizContainer = document.getElementById('quiz-container');
+    const total = quizData[currentChapter].length;
+    
+    quizContainer.innerHTML = `
+        <div class="final-result">
+            <h2>Hasil Akhir</h2>
+            <p>Anda menjawab ${score} dari ${total} soal dengan benar.</p>
+            <p>Skor: ${Math.round((score/total) * 100)}%</p>
+            <button onclick="restartQuiz()" class="chapter-btn">Ulangi Kuis</button>
+        </div>
+    `;
+}
+
+// Fungsi untuk mengupdate progress bar
+function updateProgress() {
+    const progressBar = document.querySelector('.progress');
+    if (progressBar && currentChapter && quizData[currentChapter]) {
+        const progress = ((currentQuestionIndex + 1) / quizData[currentChapter].length) * 100;
+        progressBar.style.width = `${progress}%`;
+    }
+}
+
+// Fungsi untuk restart quiz
+function restartQuiz() {
+    currentQuestionIndex = 0;
+    score = 0;
+    loadQuestion();
+    updateProgress();
+}
+
+// Load saved progress when page loads
+window.addEventListener('DOMContentLoaded', async () => {
+    loggedInUser = localStorage.getItem('loggedInUser');
+    if (!loggedInUser) {
+        window.location.href = 'login.html';
+        return;
+    }
+
+    try {
+        const response = await fetch(`http://localhost:5000/api/progress/${loggedInUser}`);
+        if (response.ok) {
+            const data = await response.json();
+            currentChapter = data.currentChapter;
+            currentQuestionIndex = data.currentQuestionIndex;
+            score = data.score;
+
+            if (currentChapter) {
+                const chapterBtn = document.querySelector(`[data-chapter="${currentChapter}"]`);
+                if (chapterBtn) {
+                    chapterBtn.click();
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error loading progress:', error);
+    }
+});
 
 // Event listener untuk tombol submit jawaban
 document.querySelector('#submit-quiz').addEventListener('click', async () => {
@@ -1021,38 +1169,38 @@ document.querySelectorAll('.chapter-btn').forEach(button => {
 });
 
 // Fungsi untuk memuat progress user
+// Di script.js
 async function loadUserProgress() {
-    if (!loggedInUser) {
-        console.error('No user logged in');
-        return;
-    }
+  if (!loggedInUser) {
+      console.error('No user logged in');
+      return;
+  }
 
-    try {
-        const response = await fetch(`http://localhost:5000/api/progress/${loggedInUser}`);
-        if (!response.ok) {
-            throw new Error('Failed to load progress');
-        }
+  try {
+      const response = await fetch(`http://localhost:5000/api/progress/${loggedInUser}`);
+      if (!response.ok) {
+          throw new Error('Failed to load progress');
+      }
 
-        const data = await response.json();
-        console.log('Loaded progress:', data);
+      const data = await response.json();
+      console.log('Loaded progress:', data);
 
-        if (data) {
-            currentChapter = data.currentChapter;
-            currentQuestionIndex = data.currentQuestionIndex;
-            score = data.score;
+      if (data) {
+          currentChapter = data.currentChapter;
+          currentQuestionIndex = data.currentQuestionIndex;
+          score = data.score;
 
-            if (currentChapter) {
-                const chapterBtn = document.querySelector(`[data-chapter="${currentChapter}"]`);
-                if (chapterBtn) {
-                    chapterBtn.click();
-                }
-            }
-        }
-    } catch (error) {
-        console.error('Error loading progress:', error);
-    }
+          if (currentChapter) {
+              const chapterBtn = document.querySelector(`[data-chapter="${currentChapter}"]`);
+              if (chapterBtn) {
+                  chapterBtn.click();
+              }
+          }
+      }
+  } catch (error) {
+      console.error('Error loading progress:', error);
+  }
 }
-
 // Load progress saat halaman dimuat
 document.addEventListener('DOMContentLoaded', () => {
     if (!loggedInUser) {
@@ -1061,3 +1209,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     loadUserProgress();
 });
+
+// Di login.js atau di tempat yang sesuai setelah login berhasil
+localStorage.setItem('username', username);
+window.location.href = 'home.html';
