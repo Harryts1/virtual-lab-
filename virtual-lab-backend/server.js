@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const cors = require('cors');
+const session = require('express-session');
 const path = require('path');
 require('dotenv').config();
 
@@ -14,6 +15,12 @@ app.use(cors({
 }));
 app.use(express.json());
 
+app.use(session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false } // Set to true if using HTTPS
+}));
 // Serve static files
 app.use(express.static(path.join(__dirname, '../src')));
 
@@ -50,6 +57,38 @@ const userSchema = new mongoose.Schema({
 });
 
 const User = mongoose.model('User', userSchema);
+
+// Di server.js atau buat file baru models/UserProgress.js
+
+const userProgressSchema = new mongoose.Schema({
+    username: { 
+        type: String, 
+        required: true 
+    },
+    currentChapter: { 
+        type: String, 
+        default: '' 
+    },
+    currentQuestionIndex: { 
+        type: Number, 
+        default: 0 
+    },
+    score: { 
+        type: Number, 
+        default: 0 
+    },
+    answers: [{
+        chapter: String,
+        questionIndex: Number,
+        isCorrect: Boolean,
+        timestamp: { 
+            type: Date, 
+            default: Date.now 
+        }
+    }]
+});
+const UserProgress = mongoose.model('UserProgress', userProgressSchema);
+module.exports = UserProgress;
 
 // API Routes
 app.post('/api/signup', async (req, res) => {
@@ -129,24 +168,19 @@ app.post('/api/login', async (req, res) => {
     try {
         const { username, password } = req.body;
 
-        // Validasi input
-        if (!username || !password) {
-            return res.status(400).json({ message: 'Username dan password harus diisi' });
-        }
-
-        // Cari user berdasarkan username
         const user = await User.findOne({ username });
         if (!user) {
             return res.status(401).json({ message: 'Username atau password salah' });
         }
 
-        // Verifikasi password
         const validPassword = await bcrypt.compare(password, user.password);
         if (!validPassword) {
             return res.status(401).json({ message: 'Username atau password salah' });
         }
 
-        // Login berhasil
+        // Set session
+        req.session.userId = user._id;
+
         res.status(200).json({ 
             message: 'Login berhasil',
             username: user.username
@@ -161,29 +195,111 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-const userProgressSchema = new mongoose.Schema({
-    username: { type: String, required: true, unique: true },
-    currentChapter: { type: String, default: '' },
-    currentQuestionIndex: { type: Number, default: 0 },
-    score: { type: Number, default: 0 }
-});
-const UserProgress = mongoose.model('UserProgress', userProgressSchema);
+// Middleware untuk memeriksa autentikasi
+const isAuthenticated = (req, res, next) => {
+    if (req.session.userId) {
+        next();
+    } else {
+        res.status(401).json({ message: 'Tidak terautentikasi' });
+    }
+};
 
-// Get user progress
-app.get('/api/progress/:username', async (req, res) => {
+// Rute untuk menyimpan progress
+// Di server.js
+// Endpoint untuk menyimpan progress
+// Endpoint untuk menyimpan progress
+app.post('/api/progress', async (req, res) => {
     try {
-        const username = req.params.username;
-        const progress = await UserProgress.findOne({ username });
+        const { username, currentChapter, currentQuestionIndex, score, answer } = req.body;
         
-        if (!progress) {
-            return res.status(404).json({ message: 'No progress found' });
+        console.log('Saving progress for user:', username, {
+            currentChapter,
+            currentQuestionIndex,
+            score,
+            answer
+        });
+
+        let progress = await UserProgress.findOne({ username });
+        
+        if (progress) {
+            // Update existing progress
+            progress.currentChapter = currentChapter;
+            progress.currentQuestionIndex = currentQuestionIndex;
+            progress.score = score;
+            if (answer) {
+                progress.answers.push(answer);
+            }
+        } else {
+            // Create new progress
+            progress = new UserProgress({
+                username,
+                currentChapter,
+                currentQuestionIndex,
+                score,
+                answers: answer ? [answer] : []
+            });
         }
+
+        await progress.save();
+        console.log('Progress saved successfully');
         
-        res.json(progress);
+        res.status(200).json({
+            message: 'Progress saved successfully',
+            progress
+        });
     } catch (error) {
-        console.error('Error fetching progress:', error);
-        res.status(500).json({ message: 'Error fetching progress' });
+        console.error('Error saving progress:', error);
+        res.status(500).json({
+            message: 'Error saving progress',
+            error: error.message
+        });
     }
 });
 
+// Endpoint untuk mengambil progress
+app.get('/api/progress/:username', async (req, res) => {
+    try {
+        const { username } = req.params;
+        console.log('Fetching progress for user:', username);
 
+        const progress = await UserProgress.findOne({ username });
+        
+        if (!progress) {
+            console.log('No progress found for user:', username);
+            return res.status(404).json({ message: 'No progress found' });
+        }
+
+        console.log('Progress found:', progress);
+        res.json(progress);
+    } catch (error) {
+        console.error('Error fetching progress:', error);
+        res.status(500).json({
+            message: 'Error fetching progress',
+            error: error.message
+        });
+    }
+});
+
+// Rute untuk mengambil progress
+app.get('/api/progress', isAuthenticated, async (req, res) => {
+    try {
+        const progress = await UserProgress.findOne({ userId: req.session.userId });
+        if (!progress) {
+            return res.status(404).json({ message: 'Progress tidak ditemukan' });
+        }
+        res.json(progress);
+    } catch (error) {
+        console.error('Error mengambil progress:', error);
+        res.status(500).json({ message: 'Gagal mengambil progress' });
+    }
+});
+
+// Rute Logout
+app.post('/api/logout', (req, res) => {
+    req.session.destroy((err) => {
+        if (err) {
+            return res.status(500).json({ message: 'Gagal logout' });
+        }
+        res.json({ message: 'Berhasil logout' });
+    });
+});

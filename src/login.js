@@ -8,49 +8,29 @@ document.addEventListener('DOMContentLoaded', function() {
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             
-            // Determine if we're running on live server or localhost:5000
-            const isLiveServer = window.location.origin.includes('127.0.0.1:5500');
-            const apiUrl = isLiveServer ? 'http://localhost:5000/api/login' : '/api/login';
-            
             try {
-                const response = await fetch(apiUrl, {
+                const response = await fetch('http://localhost:5000/api/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ username, password })
+                    body: JSON.stringify({ username, password }),
+                    credentials: 'include' // Penting untuk mengirim cookies
                 });
 
                 const data = await response.json();
 
                 if (response.ok) {
-                    localStorage.setItem('loggedInUser', username);
-                    
-                    // Redirect based on the server environment
-                    if (isLiveServer) {
-                        window.location.href = 'http://127.0.0.1:5500/src/home.html';
-                    } else {
-                        window.location.href = '/home.html';
-                    }
+                    localStorage.setItem('username', username);
+                    window.location.href = 'home.html';
                 } else {
                     const errorElement = document.getElementById('error-message');
-                    if (errorElement) {
-                        errorElement.textContent = data.message;
-                    } else {
-                        const newErrorMessage = document.createElement('p');
-                        newErrorMessage.id = 'error-message';
-                        newErrorMessage.textContent = data.message;
-                        newErrorMessage.style.color = 'red';
-                        loginForm.appendChild(newErrorMessage);
-                    }
+                    errorElement.textContent = data.message;
                 }
             } catch (error) {
                 console.error('Error:', error);
-                const errorElement = document.getElementById('error-message') || 
-                    loginForm.appendChild(document.createElement('p'));
-                errorElement.id = 'error-message';
+                const errorElement = document.getElementById('error-message');
                 errorElement.textContent = 'An error occurred. Please try again.';
-                errorElement.style.color = 'red';
             }
         });
     }
