@@ -60,10 +60,102 @@ const User = mongoose.model('User', userSchema);
 
 // Di server.js atau buat file baru models/UserProgress.js
 
+// server.js
+
+// Endpoint untuk menyimpan progress
+app.post('/api/progress', async (req, res) => {
+    try {
+        const { username, currentChapter, currentQuestionIndex, score, answer } = req.body;
+        
+        console.log('Received progress data:', {
+            username,
+            currentChapter,
+            currentQuestionIndex,
+            score,
+            answer
+        });
+
+        if (!username) {
+            return res.status(400).json({ message: 'Username is required' });
+        }
+
+        let progress = await UserProgress.findOne({ username });
+        
+        if (progress) {
+            // Update existing progress
+            progress.currentChapter = currentChapter;
+            progress.currentQuestionIndex = currentQuestionIndex;
+            progress.score = score;
+            if (answer) {
+                progress.answers.push({
+                    chapter: answer.chapter,
+                    questionIndex: answer.questionIndex,
+                    isCorrect: answer.isCorrect,
+                    timestamp: new Date()
+                });
+            }
+        } else {
+            // Create new progress
+            progress = new UserProgress({
+                username,
+                currentChapter,
+                currentQuestionIndex,
+                score,
+                answers: answer ? [{
+                    chapter: answer.chapter,
+                    questionIndex: answer.questionIndex,
+                    isCorrect: answer.isCorrect,
+                    timestamp: new Date()
+                }] : []
+            });
+        }
+
+        await progress.save();
+        console.log('Progress saved successfully:', progress);
+        
+        res.status(200).json({
+            message: 'Progress saved successfully',
+            progress
+        });
+    } catch (error) {
+        console.error('Error saving progress:', error);
+        res.status(500).json({
+            message: 'Error saving progress',
+            error: error.message
+        });
+    }
+});
+
+// Endpoint untuk mengambil progress
+app.get('/api/progress/:username', async (req, res) => {
+    try {
+        const { username } = req.params;
+        console.log('Fetching progress for user:', username);
+
+        const progress = await UserProgress.findOne({ username });
+        
+        if (!progress) {
+            console.log('No progress found for user:', username);
+            return res.status(404).json({ message: 'No progress found' });
+        }
+
+        console.log('Progress found:', progress);
+        res.json(progress);
+    } catch (error) {
+        console.error('Error fetching progress:', error);
+        res.status(500).json({
+            message: 'Error fetching progress',
+            error: error.message
+        });
+    }
+});
+
+// Model untuk UserProgress (tambahkan di bagian atas file atau file terpisah)
 const userProgressSchema = new mongoose.Schema({
     username: { 
         type: String, 
-        required: true 
+        required: true,
+        unique: true 
     },
     currentChapter: { 
         type: String, 
@@ -80,16 +172,15 @@ const userProgressSchema = new mongoose.Schema({
     answers: [{
         chapter: String,
         questionIndex: Number,
-        isCorrect: Boolean,
+        isCorrect: Boolean, // Pastikan ini didefinisikan sebagai Boolean
         timestamp: { 
             type: Date, 
             default: Date.now 
         }
     }]
 });
-const UserProgress = mongoose.model('UserProgress', userProgressSchema);
-module.exports = UserProgress;
 
+const UserProgress = mongoose.model('UserProgress', userProgressSchema);
 // API Routes
 app.post('/api/signup', async (req, res) => {
     try {
@@ -209,78 +300,6 @@ const isAuthenticated = (req, res, next) => {
 // Endpoint untuk menyimpan progress
 // Endpoint untuk menyimpan progress
 // Di server.js
-app.post('/api/progress', async (req, res) => {
-    try {
-        const { username, currentChapter, currentQuestionIndex, score, answer } = req.body;
-        
-        console.log('Saving progress for user:', username, {
-            currentChapter,
-            currentQuestionIndex,
-            score,
-            answer
-        });
-
-        let progress = await UserProgress.findOne({ username });
-        
-        if (progress) {
-            // Update existing progress
-            progress.currentChapter = currentChapter;
-            progress.currentQuestionIndex = currentQuestionIndex;
-            progress.score = score;
-            if (answer) {
-                progress.answers.push(answer);
-            }
-        } else {
-            // Create new progress
-            progress = new UserProgress({
-                username,
-                currentChapter,
-                currentQuestionIndex,
-                score,
-                answers: answer ? [answer] : []
-            });
-        }
-
-        await progress.save();
-        console.log('Progress saved successfully');
-        
-        res.status(200).json({
-            message: 'Progress saved successfully',
-            progress
-        });
-    } catch (error) {
-        console.error('Error saving progress:', error);
-        res.status(500).json({
-            message: 'Error saving progress',
-            error: error.message
-        });
-    }
-});
-
-// Rute untuk mengambil progress
-// Di server.js
-app.get('/api/progress/:username', async (req, res) => {
-    try {
-        const { username } = req.params;
-        console.log('Fetching progress for user:', username);
-
-        const progress = await UserProgress.findOne({ username });
-        
-        if (!progress) {
-            console.log('No progress found for user:', username);
-            return res.status(404).json({ message: 'No progress found' });
-        }
-
-        console.log('Progress found:', progress);
-        res.json(progress);
-    } catch (error) {
-        console.error('Error fetching progress:', error);
-        res.status(500).json({
-            message: 'Error fetching progress',
-            error: error.message
-        });
-    }
-});
 
 // Rute Logout
 app.post('/api/logout', (req, res) => {
