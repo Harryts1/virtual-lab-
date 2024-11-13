@@ -14,15 +14,15 @@ app.use(cors({
 }));
 app.use(express.json());
 
-app.use(session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: true,
-    cookie: { secure: false } 
-}));
+// app.use(session({
+//     secret: process.env.SESSION_SECRET,
+//     resave: false,
+//     saveUninitialized: true,
+//     cookie: { secure: false } 
+// }));
 
 app.get('/', (req, res) => {
-    res.send('Welcome to Virtual Lab'); // Mengirimkan teks sederhana
+    res.send('Welcome to Virtual Lab'); 
 });
 
 mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true, serverSelectionTimeoutMS: 5000, })
