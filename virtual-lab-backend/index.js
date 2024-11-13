@@ -216,22 +216,6 @@ app.post('/api/signup', async (req, res) => {
     }
 });
 
-app.get('/login', (req, res) => {
-    res.sendFile(path.join(__dirname, '../src/login.html'));
-});
-
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '../src/index.html'));
-});
-
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../src/index.html'));
-});
-
-app.get('/signup', (req, res) => {
-    res.sendFile(path.join(__dirname, '../src/signup.html'));
-});
-
 const PORT = process.env.PORT || 5000;  
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
