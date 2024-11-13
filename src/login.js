@@ -1,4 +1,3 @@
-// login.js
 document.addEventListener('DOMContentLoaded', function() {
     const loginForm = document.getElementById('login-form');
     
@@ -22,7 +21,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 const data = await response.json();
 
                 if (response.ok) {
-                    // Simpan username di localStorage
                     localStorage.setItem('loggedInUser', username);
                     window.location.href = 'home.html';
                 } else {

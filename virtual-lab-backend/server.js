@@ -8,9 +8,8 @@ require('dotenv').config();
 
 const app = express();
 
-// Middleware
 app.use(cors({
-    origin: 'http://127.0.0.1:5500', // Allow requests from Live Server
+    origin: 'http://127.0.0.1:5500', 
     credentials: true
 }));
 app.use(express.json());
@@ -19,17 +18,15 @@ app.use(session({
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: false } // Set to true if using HTTPS
+    cookie: { secure: false } 
 }));
-// Serve static files
+
 app.use(express.static(path.join(__dirname, '../src')));
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true, serverSelectionTimeoutMS: 5000, })
   .then(() => console.log('Connected to MongoDB'))
   .catch(err => console.error('Could not connect to MongoDB', err));
 
-// User Schema
 const userSchema = new mongoose.Schema({
     username: { 
         type: String, 
@@ -58,11 +55,6 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', userSchema);
 
-// Di server.js atau buat file baru models/UserProgress.js
-
-// server.js
-
-// Endpoint untuk menyimpan progress
 app.post('/api/progress', async (req, res) => {
     try {
         const { username, currentChapter, currentQuestionIndex, score, answer } = req.body;
@@ -82,7 +74,6 @@ app.post('/api/progress', async (req, res) => {
         let progress = await UserProgress.findOne({ username });
         
         if (progress) {
-            // Update existing progress
             progress.currentChapter = currentChapter;
             progress.currentQuestionIndex = currentQuestionIndex;
             progress.score = score;
@@ -95,7 +86,6 @@ app.post('/api/progress', async (req, res) => {
                 });
             }
         } else {
-            // Create new progress
             progress = new UserProgress({
                 username,
                 currentChapter,
@@ -126,7 +116,6 @@ app.post('/api/progress', async (req, res) => {
     }
 });
 
-// Endpoint untuk mengambil progress
 app.get('/api/progress/:username', async (req, res) => {
     try {
         const { username } = req.params;
@@ -150,7 +139,6 @@ app.get('/api/progress/:username', async (req, res) => {
     }
 });
 
-// Model untuk UserProgress (tambahkan di bagian atas file atau file terpisah)
 const userProgressSchema = new mongoose.Schema({
     username: { 
         type: String, 
@@ -172,7 +160,7 @@ const userProgressSchema = new mongoose.Schema({
     answers: [{
         chapter: String,
         questionIndex: Number,
-        isCorrect: Boolean, // Pastikan ini didefinisikan sebagai Boolean
+        isCorrect: Boolean,
         timestamp: { 
             type: Date, 
             default: Date.now 
@@ -181,17 +169,14 @@ const userProgressSchema = new mongoose.Schema({
 });
 
 const UserProgress = mongoose.model('UserProgress', userProgressSchema);
-// API Routes
 app.post('/api/signup', async (req, res) => {
     try {
         const { username, email, password } = req.body;
 
-        // Validate input
         if (!username || !email || !password) {
             return res.status(400).json({ message: 'All fields are required' });
         }
 
-        // Check if user already exists
         const existingUser = await User.findOne({ 
             $or: [
                 { username: username },
@@ -206,11 +191,9 @@ app.post('/api/signup', async (req, res) => {
             return res.status(400).json({ message: 'Email already registered' });
         }
 
-        // Hash password
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // Create new user
         const user = new User({
             username,
             email,
@@ -233,8 +216,6 @@ app.post('/api/signup', async (req, res) => {
     }
 });
 
-
-// ... rest of your server code (login route, etc.)
 app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, '../src/login.html'));
 });
@@ -243,7 +224,6 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../src/index.html'));
 });
 
-// Catch-all route for any other requests
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '../src/index.html'));
 });
@@ -269,7 +249,6 @@ app.post('/api/login', async (req, res) => {
             return res.status(401).json({ message: 'Username atau password salah' });
         }
 
-        // Set session
         req.session.userId = user._id;
 
         res.status(200).json({ 
@@ -286,7 +265,6 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// Middleware untuk memeriksa autentikasi
 const isAuthenticated = (req, res, next) => {
     if (req.session.userId) {
         next();
@@ -295,13 +273,6 @@ const isAuthenticated = (req, res, next) => {
     }
 };
 
-// Rute untuk menyimpan progress
-// Di server.js
-// Endpoint untuk menyimpan progress
-// Endpoint untuk menyimpan progress
-// Di server.js
-
-// Rute Logout
 app.post('/api/logout', (req, res) => {
     req.session.destroy((err) => {
         if (err) {

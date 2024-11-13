@@ -934,14 +934,8 @@ document.getElementById('login-form').addEventListener('submit', function(e) {
 });
 
 
-// Fungsi untuk menyimpan progress
-// Di script.js
-// script.js
-
-// Variabel global
 let loggedInUser = localStorage.getItem('loggedInUser');
 
-// Fungsi untuk menyimpan progress
 async function saveProgress(isCorrect) {
     const loggedInUser = localStorage.getItem('loggedInUser');
     
@@ -962,7 +956,7 @@ async function saveProgress(isCorrect) {
         }
     };
 
-    console.log('Saving progress:', progressData); // Debugging
+    console.log('Saving progress:', progressData); 
 
     try {
         const response = await fetch('http://localhost:5000/api/progress', {
@@ -985,7 +979,6 @@ async function saveProgress(isCorrect) {
     }
 }
 
-// Fungsi untuk memuat pertanyaan
 function loadQuestion() {
     if (!currentChapter || !quizData[currentChapter]) {
         console.error('No chapter selected');
@@ -1007,13 +1000,11 @@ function loadQuestion() {
         </div>
     `;
 
-    // Reset tombol dan hasil
     document.getElementById('submit-quiz').style.display = 'block';
     document.getElementById('next-question').style.display = 'none';
     document.getElementById('quiz-result').innerHTML = '';
 }
 
-// Event listener untuk tombol submit jawaban
 document.getElementById('submit-quiz')?.addEventListener('click', async () => {
     const selectedAnswer = document.querySelector('input[name="answer"]:checked');
     if (!selectedAnswer) {
@@ -1032,14 +1023,12 @@ document.getElementById('submit-quiz')?.addEventListener('click', async () => {
         document.getElementById('quiz-result').innerHTML = '<p style="color: red;">Salah!</p>';
     }
 
-    // Simpan progress
     await saveProgress(isCorrect);
 
     document.getElementById('submit-quiz').style.display = 'none';
     document.getElementById('next-question').style.display = 'block';
 });
 
-// Event listener untuk tombol next
 document.getElementById('next-question')?.addEventListener('click', () => {
     currentQuestionIndex++;
     if (currentQuestionIndex < quizData[currentChapter].length) {
@@ -1050,19 +1039,17 @@ document.getElementById('next-question')?.addEventListener('click', () => {
     }
 });
 
-// Event listener untuk pemilihan chapter
 document.querySelectorAll('.chapter-btn').forEach(button => {
     button.addEventListener('click', async () => {
         currentChapter = button.getAttribute('data-chapter');
         currentQuestionIndex = 0;
         score = 0;
-        await saveProgress(false); // Simpan progress awal chapter
+        await saveProgress(false);
         loadQuestion();
         updateProgress();
     });
 });
 
-// Fungsi untuk menampilkan hasil akhir
 function showFinalResult() {
     const quizContainer = document.getElementById('quiz-container');
     const total = quizData[currentChapter].length;
@@ -1077,7 +1064,6 @@ function showFinalResult() {
     `;
 }
 
-// Fungsi untuk mengupdate progress bar
 function updateProgress() {
     const progressBar = document.querySelector('.progress');
     if (progressBar && currentChapter && quizData[currentChapter]) {
@@ -1086,7 +1072,6 @@ function updateProgress() {
     }
 }
 
-// Fungsi untuk restart quiz
 function restartQuiz() {
     currentQuestionIndex = 0;
     score = 0;
@@ -1094,7 +1079,6 @@ function restartQuiz() {
     updateProgress();
 }
 
-// Load saved progress when page loads
 window.addEventListener('DOMContentLoaded', async () => {
     loggedInUser = localStorage.getItem('loggedInUser');
     if (!loggedInUser) {
@@ -1122,7 +1106,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-// Event listener untuk tombol submit jawaban
 document.querySelector('#submit-quiz').addEventListener('click', async () => {
     const selectedAnswer = document.querySelector('input[name="answer"]:checked');
     if (!selectedAnswer) return;
@@ -1138,14 +1121,12 @@ document.querySelector('#submit-quiz').addEventListener('click', async () => {
         document.getElementById('quiz-result').innerHTML = '<p style="color: red;">Salah!</p>';
     }
 
-    // Simpan progress setelah menjawab
     await saveProgress(isCorrect);
 
     document.getElementById('submit-quiz').style.display = 'none';
     document.getElementById('next-question').style.display = 'block';
 });
 
-// Event listener untuk tombol next
 document.querySelector('#next-question').addEventListener('click', async () => {
     currentQuestionIndex++;
     if (currentQuestionIndex < quizData[currentChapter].length) {
@@ -1156,7 +1137,6 @@ document.querySelector('#next-question').addEventListener('click', async () => {
     }
 });
 
-// Event listener untuk pemilihan chapter
 document.querySelectorAll('.chapter-btn').forEach(button => {
     button.addEventListener('click', async () => {
         currentChapter = button.getAttribute('data-chapter');
@@ -1168,8 +1148,6 @@ document.querySelectorAll('.chapter-btn').forEach(button => {
     });
 });
 
-// Fungsi untuk memuat progress user
-// Di script.js
 async function loadUserProgress() {
   if (!loggedInUser) {
       console.error('No user logged in');
@@ -1201,7 +1179,6 @@ async function loadUserProgress() {
       console.error('Error loading progress:', error);
   }
 }
-// Load progress saat halaman dimuat
 document.addEventListener('DOMContentLoaded', () => {
     if (!loggedInUser) {
         window.location.href = 'login.html';
@@ -1210,6 +1187,5 @@ document.addEventListener('DOMContentLoaded', () => {
     loadUserProgress();
 });
 
-// Di login.js atau di tempat yang sesuai setelah login berhasil
 localStorage.setItem('username', username);
 window.location.href = 'home.html';
