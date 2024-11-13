@@ -1,6 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
 const cors = require('cors');
 const session = require('express-session');
 const path = require('path');
@@ -9,21 +9,19 @@ require('dotenv').config();
 const app = express();
 
 app.use(cors({
-    origin: 'http://127.0.0.1:5000', 
+    origin: 'http://127.0.0.1:5500', 
     credentials: true
 }));
 app.use(express.json());
 
-// app.use(session({
-//     secret: process.env.SESSION_SECRET,
-//     resave: false,
-//     saveUninitialized: true,
-//     cookie: { secure: false } 
-// }));
+app.use(session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false } 
+}));
 
-app.get('/', (req, res) => {
-    res.send('Welcome to Virtual Lab'); 
-});
+app.use(express.static(path.join(__dirname, '../src')));
 
 mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true, serverSelectionTimeoutMS: 5000, })
   .then(() => console.log('Connected to MongoDB'))
