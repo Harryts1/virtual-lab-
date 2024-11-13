@@ -21,6 +21,10 @@ app.use(session({
     cookie: { secure: false } 
 }));
 
+app.get('/', (req, res) => {
+    res.send('Welcome to Virtual Lab'); // Mengirimkan teks sederhana
+});
+
 mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true, serverSelectionTimeoutMS: 5000, })
   .then(() => console.log('Connected to MongoDB'))
   .catch(err => console.error('Could not connect to MongoDB', err));
