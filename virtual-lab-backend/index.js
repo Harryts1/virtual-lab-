@@ -1,6 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const cors = require('cors');
 const session = require('express-session');
 const path = require('path');
@@ -20,8 +20,6 @@ app.use(session({
     saveUninitialized: true,
     cookie: { secure: false } 
 }));
-
-app.use(express.static(path.join(__dirname, '../src')));
 
 mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true, serverSelectionTimeoutMS: 5000, })
   .then(() => console.log('Connected to MongoDB'))
