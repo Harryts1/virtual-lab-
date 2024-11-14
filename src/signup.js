@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             try {
-                const response = await fetch('https://virtual-lab-beige.vercel.app/api/signup', {
+                const response = await fetch(`${process.env.BACKEND_URL}api/signup`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
