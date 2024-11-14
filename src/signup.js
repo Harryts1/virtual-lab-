@@ -31,19 +31,25 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             try {
-                const response = await fetch(`${process.env.BACKEND_URL}api/signup`, {
+                const response = await fetch('https://virtual-lab-beige.vercel.app/api/signup', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({ username, email, password }),
+                    mode: 'cors',
+                    credentials: 'include'
                 });
 
                 const data = await response.json();
+                console.log('Signup response:', data);
 
                 if (response.ok) {
+                    errorElement.style.color = 'green';
                     alert('Account created successfully! Please login.');
-                    window.location.href = 'login.html';
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 1500);
                 } else {
                     errorElement.textContent = data.message || 'Signup failed';
                 }
