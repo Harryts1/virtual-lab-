@@ -9,16 +9,30 @@ require('dotenv').config();
 const app = express();
 
 app.use(cors({
-    origin: process.env.FRONTEND_URL, 
-    credentials: true
+    origin: ['https://virtual-lab-yan5.vercel.app', 'http://localhost:3000'], 
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
+
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Origin', 'https://virtual-lab-yan5.vercel.app');
+    next();
+});
 
 app.use(session({
     secret: process.env.SESSION_SECRET,
     resave: false,
-    saveUninitialized: true,
-    cookie: { secure: true } 
+    saveUninitialized: false,
+    cookie: {
+        secure: true, 
+        sameSite: 'none', 
+        maxAge: 24 * 60 * 60 * 1000, // 24 jam
+        domain: '.vercel.app' 
+    },
+    proxy: true
 }));
 
 app.use(express.static(path.join(__dirname, '../src')));

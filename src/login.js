@@ -9,26 +9,35 @@ document.addEventListener('DOMContentLoaded', function() {
             const password = document.getElementById('password').value;
             
             try {
-                const response = await fetch(`${process.env.BACKEND_URL}api/login`, {
+                const response = await fetch('https://virtual-lab-beige.vercel.app/api/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({ username, password }),
-                    credentials: 'include'
+                    credentials: 'include',
+                    mode: 'cors'
                 });
 
                 const data = await response.json();
-
+                console.log('Login response:', data);
+                
                 if (response.ok) {
                     localStorage.setItem('loggedInUser', username);
-                    window.location.href = 'home.html';
+                    setTimeout(() => {
+                        window.location.href = 'home.html';
+                    }, 100);
                 } else {
                     const errorElement = document.getElementById('error-message');
-                    errorElement.textContent = data.message;
+                    if (errorElement) {
+                        errorElement.textContent = data.message || 'Login failed';
+                    } else {
+                        alert(data.message || 'Login failed');
+                    }
                 }
             } catch (error) {
-                console.error('Error:', error);
+                console.error('Login error:', error);
+                alert('Error connecting to server. Please try again.');
             }
         });
     }
