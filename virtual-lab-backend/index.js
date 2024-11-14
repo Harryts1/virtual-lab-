@@ -35,7 +35,13 @@ app.use(session({
     proxy: true
 }));
 
-app.use(express.static(path.join(__dirname, '../src')));
+app.get('/', (req, res) => {
+    res.json({ 
+        message: "Welcome to Virtual Lab API",
+        status: "Server is running",
+        documentation: "API endpoints available at /api/*"
+    });
+});
 
 mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true, serverSelectionTimeoutMS: 5000, })
   .then(() => console.log('Connected to MongoDB'))
