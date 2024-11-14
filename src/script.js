@@ -959,7 +959,7 @@ async function saveProgress(isCorrect) {
     console.log('Saving progress:', progressData); 
 
     try {
-        const response = await fetch(`${process.env.BACKEND_URL}api/progress`, {
+        const response = await fetch('https://virtual-lab-beige.vercel.app/api/progress', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1087,7 +1087,9 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
 
     try {
-        const response = await fetch(`${process.env.BACKEND_URL}/api/progress/${loggedInUser}`);
+        const response = await fetch(`https://virtual-lab-beige.vercel.app/api/progress/${loggedInUser}`, {
+          credentials: 'include'
+      });
         if (response.ok) {
             const data = await response.json();
             currentChapter = data.currentChapter;
@@ -1155,7 +1157,9 @@ async function loadUserProgress() {
   }
 
   try {
-      const response = await fetch(`${process.env.BACKEND_URL}api/progress/${loggedInUser}`);
+      const response = await fetch(`https://virtual-lab-beige.vercel.app/api/progress/${loggedInUser}`, {
+        credentials: 'include'
+    });
       if (!response.ok) {
           throw new Error('Failed to load progress');
       }
