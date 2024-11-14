@@ -9,7 +9,7 @@ require('dotenv').config();
 const app = express();
 
 app.use(cors({
-    origin: 'https://virtual-lab-yan5.vercel.app/', 
+    origin: process.env.FRONTEND_URL, 
     credentials: true
 }));
 app.use(express.json());
