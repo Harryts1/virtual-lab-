@@ -1087,7 +1087,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
 
     try {
-        const response = await fetch(`http://localhost:5000/api/progress/${loggedInUser}`);
+        const response = await fetch(`https://virtual-lab-beige.vercel.app/api/progress/${loggedInUser}`);
         if (response.ok) {
             const data = await response.json();
             currentChapter = data.currentChapter;
@@ -1155,7 +1155,7 @@ async function loadUserProgress() {
   }
 
   try {
-      const response = await fetch(`http://localhost:5000/api/progress/${loggedInUser}`);
+      const response = await fetch(`https://virtual-lab-beige.vercel.app/api/progress/${loggedInUser}`);
       if (!response.ok) {
           throw new Error('Failed to load progress');
       }
